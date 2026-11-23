@@ -29,13 +29,13 @@ FONT_FAMILY = get_system_font_family()
 class InfoDialog(QDialog):
     """自定义提示对话框 - 跨平台一致的视觉效果"""
 
-    # 设计系统颜色常量
-    PRIMARY = "#5B8DEF"
-    PRIMARY_HOVER = "#4A7FE0"
-    TEXT_PRIMARY = "#1E293B"
-    TEXT_SECONDARY = "#64748B"
+    # 设计系统颜色常量（皮卡丘黄主色，主色上的文字白色）
+    PRIMARY = "#FFD93D"
+    PRIMARY_HOVER = "#FFC107"
+    TEXT_PRIMARY = "#2B2B2B"
+    TEXT_SECONDARY = "#6B6B6B"
     BG_MAIN = "#FFFFFF"
-    BORDER = "#E2E8F0"
+    BORDER = "#F0DFA0"
 
     def __init__(self, title: str, message: str, parent=None):
         super().__init__(parent)

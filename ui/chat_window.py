@@ -71,31 +71,37 @@ def get_system_font_name():
 FONT_FAMILY = get_system_font_family()
 FONT_NAME = get_system_font_name()
 
+# 聊天正文字号（body），标题按比例递增
+CHAT_FONT_PT = 20
+CHAT_H1_PT = CHAT_FONT_PT + 4
+CHAT_H2_PT = CHAT_FONT_PT + 2
+CHAT_H3_PT = CHAT_FONT_PT + 1
+
 
 # ═══════════════════════════════════════════════════════════════════
 # 设计系统 - 颜色与间距常量
 # ═══════════════════════════════════════════════════════════════════
 class Theme:
-    """主题色板 - 温暖柔和的蓝灰色系"""
+    """主题色板 - 皮卡丘黄（主色黄，主色上的文字白色）"""
     # 主色调
-    PRIMARY = "#5B8DEF"          # 主色 - 柔和蓝
-    PRIMARY_HOVER = "#4A7FE0"    # 主色悬停
-    PRIMARY_LIGHT = "#EBF2FF"    # 主色浅底
+    PRIMARY = "#FFD93D"          # 主色 - 皮卡丘黄
+    PRIMARY_HOVER = "#FFC107"    # 主色悬停 - 深一档
+    PRIMARY_LIGHT = "#FFF9E6"    # 主色浅底
 
     # 背景色
     BG_MAIN = "#FFFFFF"          # 主背景
-    BG_CHAT = "#F8FAFC"          # 聊天区背景
-    BG_INPUT = "#F1F5F9"         # 输入框背景
+    BG_CHAT = "#FFFDF5"          # 聊天区背景（极淡奶黄）
+    BG_INPUT = "#FFF9E6"         # 输入框背景
 
     # 文字色
-    TEXT_PRIMARY = "#1E293B"     # 主文字
-    TEXT_SECONDARY = "#64748B"   # 次要文字
-    TEXT_PLACEHOLDER = "#94A3B8" # 占位符
-    TEXT_ON_PRIMARY = "#FFFFFF"  # 主色上的文字
+    TEXT_PRIMARY = "#2B2B2B"     # 主文字
+    TEXT_SECONDARY = "#6B6B6B"   # 次要文字
+    TEXT_PLACEHOLDER = "#9E9E9E" # 占位符
+    TEXT_ON_PRIMARY = "#FFFFFF"  # 主色上的文字（白）
 
     # 边框与分割
-    BORDER = "#E2E8F0"           # 边框
-    DIVIDER = "#F1F5F9"          # 分割线
+    BORDER = "#F0DFA0"           # 边框（浅金）
+    DIVIDER = "#FFF4D6"          # 分割线
 
     # 功能色
     SUCCESS = "#10B981"
@@ -105,9 +111,9 @@ class Theme:
     ERROR_BORDER = "#FECACA"
 
     # 气泡色
-    BUBBLE_USER = "#5B8DEF"
+    BUBBLE_USER = "#FFD93D"      # 用户气泡 - 皮卡丘黄 + 白字
     BUBBLE_AI = "#FFFFFF"
-    BUBBLE_SYSTEM = "#E2E8F0"
+    BUBBLE_SYSTEM = "#FFF4D6"
 
     # 阴影
     SHADOW_LIGHT = QColor(0, 0, 0, 8)
@@ -138,6 +144,8 @@ class BubbleWidget(QWidget):
 
     # 默认最大宽度，会在创建时被ChatWindow更新
     MAX_WIDTH = 300
+    # 气泡正文字号（pt），ChatWindow 初始化时会按配置覆盖
+    FONT_PT = CHAT_FONT_PT
 
     def __init__(self, text: str, is_user: bool = True, parent=None):
         super().__init__(parent)
@@ -180,7 +188,7 @@ class BubbleWidget(QWidget):
                 color: {self._text_color};
                 border: none;
                 font-family: {FONT_FAMILY};
-                font-size: 16px;
+                font-size: {self.FONT_PT}pt;
                 line-height: 1.5;
             }}
             /* 段落与标题 - 减少边距避免留白 */
@@ -192,24 +200,24 @@ class BubbleWidget(QWidget):
                 margin: 4px 0 2px 0;
             }}
             h1 {{
-                font-size: 20px;
+                font-size: {self.FONT_PT + 4}pt;
             }}
             h2 {{
-                font-size: 18px;
+                font-size: {self.FONT_PT + 2}pt;
             }}
             h3 {{
-                font-size: 17px;
+                font-size: {self.FONT_PT + 1}pt;
             }}
             /* Markdown 代码块样式 */
             pre {{
-                background-color: {'#4A7FE0' if self.is_user else '#F0F0F0'};
+                background-color: {'rgba(255,255,255,0.45)' if self.is_user else '#F0F0F0'};
                 color: {self._text_color};
                 padding: 8px;
                 border-radius: 6px;
                 margin: 4px 0;
             }}
             code {{
-                background-color: {'#4A7FE0' if self.is_user else '#E8E8E8'};
+                background-color: {'rgba(255,255,255,0.45)' if self.is_user else '#E8E8E8'};
                 padding: 2px 6px;
                 border-radius: 4px;
             }}
@@ -719,6 +727,10 @@ class ChatWindow(QWidget):
         bubble_ratio = bubble_width_ratio_map.get(size_key, 0.7)
         BubbleWidget.MAX_WIDTH = int(self.window_width * bubble_ratio)
 
+        # 聊天字号（字号设置对话框写入 ui.chat_font_pt）
+        self._chat_font_pt = int(config.get("ui", {}).get("chat_font_pt", CHAT_FONT_PT))
+        BubbleWidget.FONT_PT = self._chat_font_pt
+
         self.setWindowTitle(f"{persona_manager.name}")
         self.setFixedSize(self.window_width, self.window_height)
         # 使用无边框置顶窗口，但不再启用整窗透明，以提升性能和稳定性
@@ -1045,7 +1057,7 @@ class ChatWindow(QWidget):
                 border-radius: 24px;
                 padding: 0 {Spacing.LG}px;
                 font-family: {FONT_FAMILY};
-                font-size: 17px;
+                font-size: {self._chat_font_pt}pt;
                 color: {Theme.TEXT_PRIMARY};
             }}
             QLineEdit:focus {{
@@ -1054,7 +1066,7 @@ class ChatWindow(QWidget):
             }}
             QLineEdit::placeholder {{
                 color: {Theme.TEXT_PLACEHOLDER};
-                font-size: 16px;
+                font-size: {self._chat_font_pt}pt;
             }}
         """)
         self.message_input.returnPressed.connect(self._send_message)

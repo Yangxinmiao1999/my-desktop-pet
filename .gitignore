@@ -84,3 +84,8 @@ dmypy.json
 
 # tools
 .qoder
+# 计时记录（个人数据）
+data/timers.json
+
+# 调试输出
+run_*.txt

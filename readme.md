@@ -335,8 +335,14 @@ ui:
 
 ## 许可证
 
-MIT License
+MIT License（详见 [LICENSE](LICENSE)）
 
 ## 致谢
 
-本项目基于 [DeskTopPet](https://github.com/llq20133100095/DeskTopPet) 进行重构和扩展。
+本项目基于 [WangWinston/desktop-pet-assistant](https://github.com/WangWinston/desktop-pet-assistant)（MIT）改造扩展，原项目基于 [DeskTopPet](https://github.com/llq20133100095/DeskTopPet) 重构而来，感谢两位作者的开源贡献。
+
+在此基础上新增/修改：
+- 计时模块（单击宠物开始/结束计时，记录每日累计）
+- 皮卡丘黄主题 UI（气泡/计时器/菜单/聊天窗口）
+- 字号设置窗口（可调显示字号与对话字号）
+- 硅基流动（SiliconFlow）API 配置示例
