@@ -494,15 +494,11 @@ class DesktopPet(QWidget):
 
     def _init_timers(self):
         """初始化定时器"""
-        # 对话切换
+        # 对话切换（同一节拍驱动：每 6 秒同时弹出文字气泡与切换表情）
         self.talk_timer = QTimer(self)
         self.talk_timer.timeout.connect(self._update_talk)
+        self.talk_timer.timeout.connect(self._update_animation)
         self.talk_timer.start(6000)
-
-        # 动画切换
-        self.anim_timer = QTimer(self)
-        self.anim_timer.timeout.connect(self._update_animation)
-        self.anim_timer.start(6000)
 
         # 休息提醒
         self.rest_timer = QTimer(self)
@@ -679,8 +675,8 @@ class DesktopPet(QWidget):
         pick = random.choice(exprs)
         info = self._actions.get(pick, {})
         if info.get("loop", True):
-            # 循环类表情限时播放（跳跃/害羞等），播几秒回待机
-            self._play_action(pick, auto_revert_ms=random.choice([3000, 4000, 5000]))
+            # 循环类表情限时播放（跳跃/害羞等），播几秒回待机（GIF 总长约 3.4s，不能低于它）
+            self._play_action(pick, auto_revert_ms=random.choice([3500, 4200, 5000]))
         else:
             self._play_action(pick)
 

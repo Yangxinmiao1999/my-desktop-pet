@@ -51,24 +51,24 @@
     "name": "跳跃挥手",
     "loop": true,
     "file": "actions/hop.gif",
-    "duration_ms": 80
+    "duration_ms": 3360
   },
   "cheer": {
     "name": "爱心欢呼",
     "loop": false,
     "file": "actions/cheer.gif",
-    "duration_ms": 80
+    "duration_ms": 3360
   },
   "laugh": {
     "name": "大笑摇摆",
     "loop": false,
     "file": "actions/laugh.gif",
-    "duration_ms": 80
+    "duration_ms": 3360
   },
   "shy": {
     "name": "害羞捂脸",
     "loop": true,
     "file": "actions/shy.gif",
-    "duration_ms": 80
+    "duration_ms": 3360
   }
 }
