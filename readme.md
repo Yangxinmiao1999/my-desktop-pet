@@ -103,6 +103,19 @@ python main.py
 3. **复杂动作**（跳跃挥手、爱心欢呼、大笑摇摆、害羞捂脸）：MiniMax-H3 图生视频 → 抽帧 → 抠图 → 透明 GIF
 4. **简单动作**（呼吸、眨眼、走动等）：母版图 + 表情帧程序合成
 
+## 致谢
+
+本项目基于 [WangWinston/desktop-pet-assistant](https://github.com/WangWinston/desktop-pet-assistant)（MIT）改造扩展，原项目基于 [DeskTopPet](https://github.com/llq20133100095/DeskTopPet) 重构而来，感谢两位作者的开源贡献。
+
+在此基础上新增/修改：
+
+- 全新 2D 皮卡丘形象与 12 个 AI 生成动作表情（含表情自动轮换）
+- 计时模块（单击宠物开始/结束计时，记录每日累计）
+- 皮卡丘黄主题 UI（气泡/计时器/菜单/聊天窗口）
+- 字号设置窗口（可调显示字号与对话字号）
+- 硅基流动（SiliconFlow）API 配置示例
+- Windows 一键启动器（启动皮卡丘.exe，皮卡丘图标）
+
 ## 许可证
 
 本项目基于 MIT 许可证开源，详见 [LICENSE](LICENSE)。
