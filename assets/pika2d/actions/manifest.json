@@ -1,0 +1,74 @@
+{
+  "idle": {
+    "name": "呼吸待机",
+    "loop": true,
+    "file": "actions/idle.gif",
+    "duration_ms": 120
+  },
+  "blink": {
+    "name": "眨眼",
+    "loop": true,
+    "file": "actions/blink.gif",
+    "duration_ms": 120
+  },
+  "walk": {
+    "name": "平移走动",
+    "loop": true,
+    "file": "actions/walk.gif",
+    "duration_ms": 130
+  },
+  "sway": {
+    "name": "摇摆",
+    "loop": true,
+    "file": "actions/sway.gif",
+    "duration_ms": 110
+  },
+  "happy": {
+    "name": "开心跳",
+    "loop": false,
+    "file": "actions/happy.gif",
+    "duration_ms": 1070
+  },
+  "tilt": {
+    "name": "歪头",
+    "loop": false,
+    "file": "actions/tilt.gif",
+    "duration_ms": 1100
+  },
+  "sleep": {
+    "name": "睡眠",
+    "loop": true,
+    "file": "actions/sleep.gif",
+    "duration_ms": 150
+  },
+  "wake": {
+    "name": "唤醒",
+    "loop": false,
+    "file": "actions/wake.gif",
+    "duration_ms": 770
+  },
+  "hop": {
+    "name": "跳跃挥手",
+    "loop": true,
+    "file": "actions/hop.gif",
+    "duration_ms": 80
+  },
+  "cheer": {
+    "name": "爱心欢呼",
+    "loop": false,
+    "file": "actions/cheer.gif",
+    "duration_ms": 80
+  },
+  "laugh": {
+    "name": "大笑摇摆",
+    "loop": false,
+    "file": "actions/laugh.gif",
+    "duration_ms": 80
+  },
+  "shy": {
+    "name": "害羞捂脸",
+    "loop": true,
+    "file": "actions/shy.gif",
+    "duration_ms": 80
+  }
+}

@@ -1,4 +1,5 @@
 """桌面宠物主窗口模块 - 支持自定义状态"""
+import json
 import os
 import random
 import sys
@@ -64,7 +65,7 @@ DEFAULT_STATES = {
         "dialogs": []      # 空则使用默认文件
     },
     "click": {
-        "animation": "assets/click/click.gif",
+        "animation": "assets/pika2d/pika2d_idle.gif",
         "dialog": "⚡ 别戳我！",
         "style": f"color: {TEXT_ON_PRIMARY}; background-color: {PIKACHU_YELLOW};"
     },
@@ -353,41 +354,21 @@ class DesktopPet(QWidget):
         self._random_position()
 
     def _get_idle_animation(self):
-        """获取待机动画"""
-        idle_config = self.states.get(self.STATE_IDLE, {})
-        animations = idle_config.get("animations", [])
-
-        if animations:
-            return random.choice(animations)
-
-        # 使用默认目录
-        anim_dir = "assets/pikaqiu"
-        if not os.path.exists(anim_dir):
-            anim_dir = "pikaqiu"
-
-        if os.path.exists(anim_dir):
-            files = [os.path.join(anim_dir, f) for f in os.listdir(anim_dir) if f.endswith(".gif")]
-            if files:
-                return random.choice(files)
-
-        return "assets/pikaqiu/pikaqiu1.gif"
+        """获取待机动画（固定用动作包里的透明呼吸动画，避免扫到黑底素材）"""
+        idle_path = "assets/pika2d/actions/idle.gif"
+        if os.path.exists(idle_path):
+            return idle_path
+        idle_path = "pika2d/actions/idle.gif"
+        if os.path.exists(idle_path):
+            return idle_path
+        return "assets/pika2d/actions/idle.gif"
 
     def _load_idle_resources(self):
         """加载待机资源"""
-        # 加载待机动画列表
+        # 待机动画：固定用动作包里的透明呼吸动画（不用扫描目录，避免黑底素材混入）
+        self.idle_animations = ["assets/pika2d/actions/idle.gif"]
+
         idle_config = self.states.get(self.STATE_IDLE, {})
-        self.idle_animations = idle_config.get("animations", [])
-
-        if not self.idle_animations:
-            anim_dir = "assets/pikaqiu"
-            if not os.path.exists(anim_dir):
-                anim_dir = "pikaqiu"
-            if os.path.exists(anim_dir):
-                self.idle_animations = [os.path.join(anim_dir, f) for f in os.listdir(anim_dir) if f.endswith(".gif")]
-
-        if not self.idle_animations:
-            self.idle_animations = ["assets/pikaqiu/pikaqiu1.gif"]
-
         # 加载待机对话列表
         self.idle_dialogs = idle_config.get("dialogs", [])
         if not self.idle_dialogs:
@@ -400,26 +381,67 @@ class DesktopPet(QWidget):
             except:
                 self.idle_dialogs = ["皮卡皮卡~"]
 
+        # 加载动作包（manifest.json 驱动：程序动画 + AI 视频动作）
+        self._actions = {}
+        for mf in ("assets/pika2d/actions/manifest.json", "pika2d/actions/manifest.json"):
+            if os.path.exists(mf):
+                try:
+                    with open(mf, "r", encoding="utf-8") as f:
+                        self._actions = json.load(f)
+                    log.info(f"动作包已加载: {len(self._actions)} 个动作")
+                except Exception as exc:
+                    log.warning(f"动作包加载失败: {exc}")
+                break
+        self._action_revert_timer = None
+
+    def _cancel_action_revert(self):
+        """取消动作播完自动回待机的定时器"""
+        if self._action_revert_timer is not None:
+            try:
+                self._action_revert_timer.stop()
+            except Exception:
+                pass
+            self._action_revert_timer = None
+
+    def _play_action(self, action_id: str, auto_revert_ms=None):
+        """播放动作包里的指定动作
+
+        loop 动作常驻播放（直到用户点击或再选动作）；
+        单次动作播完自动回待机。auto_revert_ms 可强制限时回位。
+        """
+        info = self._actions.get(action_id)
+        if not info:
+            log.warning(f"未知动作: {action_id}")
+            return
+        path = os.path.join("assets", "pika2d", info.get("file", ""))
+        if not os.path.exists(path):
+            log.warning(f"动作文件缺失: {path}")
+            return
+        self._cancel_action_revert()
+        self._current_state = "action"
+        self._play_animation(path)
+        if not info.get("loop", True):
+            auto_revert_ms = info.get("duration_ms", 1000) + 250
+        if auto_revert_ms:
+            self._action_revert_timer = QTimer(self)
+            self._action_revert_timer.setSingleShot(True)
+            self._action_revert_timer.timeout.connect(self._reset_to_idle)
+            self._action_revert_timer.start(auto_revert_ms)
+        log.info(f"播放动作: {action_id}")
+
     def _play_animation(self, anim_path):
         """播放动画（统一缩放）"""
-        if os.path.exists(anim_path):
-            self.movie = QMovie(anim_path)
-            # macOS 兼容性：设置缓存模式以确保动画正常播放
-            self.movie.setCacheMode(QMovie.CacheAll)
-            self.movie.setScaledSize(QSize(self._pet_size, self._pet_size))
-            self.image_label.setMovie(self.movie)
-            self.movie.start()
-        else:
-            # 尝试默认路径
-            default = "assets/pikaqiu/pikaqiu1.gif"
-            if not os.path.exists(default):
-                default = "pikaqiu/pikaqiu1.gif"
-            if os.path.exists(default):
-                self.movie = QMovie(default)
-                self.movie.setCacheMode(QMovie.CacheAll)
-                self.movie.setScaledSize(QSize(self._pet_size, self._pet_size))
-                self.image_label.setMovie(self.movie)
-                self.movie.start()
+        if not os.path.exists(anim_path):
+            # 兜底：待机呼吸动画（透明背景）
+            anim_path = "assets/pika2d/actions/idle.gif"
+            if not os.path.exists(anim_path):
+                anim_path = "pika2d/actions/idle.gif"
+        self.movie = QMovie(anim_path)
+        # macOS 兼容性：设置缓存模式以确保动画正常播放
+        self.movie.setCacheMode(QMovie.CacheAll)
+        self.movie.setScaledSize(QSize(self._pet_size, self._pet_size))
+        self.image_label.setMovie(self.movie)
+        self.movie.start()
 
     def _show_state(self, state_name):
         """显示指定状态"""
@@ -626,7 +648,7 @@ class DesktopPet(QWidget):
         self.move(x, y)
 
     def _update_talk(self):
-        """更新对话"""
+        """更新对话气泡（表情变化由 _update_animation 定时轮换）"""
         if self._current_state == self.STATE_IDLE and self.idle_dialogs:
             text = random.choice(self.idle_dialogs)
             anchor = self._pet_anchor()
@@ -636,11 +658,31 @@ class DesktopPet(QWidget):
             self.talk_label.show()
             self._keep_pet_anchor(anchor)
 
+    # 自动轮换的表情动作（按 manifest 里实际存在的动态筛选）
+    AUTO_EXPRESSIONS = ["blink", "happy", "tilt", "sway", "hop", "cheer", "laugh", "shy"]
+
+    def _available_expressions(self):
+        """动作包里可用的自动表情列表"""
+        if not self._actions:
+            return []
+        return [a for a in self.AUTO_EXPRESSIONS if a in self._actions]
+
     def _update_animation(self):
-        """更新动画"""
-        if self._current_state == self.STATE_IDLE and self.idle_animations:
-            anim = random.choice(self.idle_animations)
-            self._play_animation(anim)
+        """定时换表情：每隔几秒随机播一个表情，其余时间保持待机呼吸"""
+        if self._current_state != self.STATE_IDLE:
+            return
+        exprs = self._available_expressions()
+        if not exprs or random.random() > 0.6:
+            # 40% 概率回到呼吸待机
+            self._play_animation(self._get_idle_animation())
+            return
+        pick = random.choice(exprs)
+        info = self._actions.get(pick, {})
+        if info.get("loop", True):
+            # 循环类表情限时播放（跳跃/害羞等），播几秒回待机
+            self._play_action(pick, auto_revert_ms=random.choice([3000, 4000, 5000]))
+        else:
+            self._play_action(pick)
 
     def _show_rest_reminder(self):
         """显示休息提醒"""
@@ -743,6 +785,7 @@ class DesktopPet(QWidget):
             self._drag_pos = event.globalPos() - self.pos()
             self._press_global = event.globalPos()
             self._press_moved = False
+            self._cancel_action_revert()
             self._current_state = self.STATE_CLICK
             self._show_state(self.STATE_CLICK)
             event.accept()
@@ -809,6 +852,22 @@ class DesktopPet(QWidget):
         chat_action = menu.addAction(f"与 {self.persona_manager.name} 聊天")
         timer_text = "⏹ 结束计时" if self._timer_running else "⏱ 开始计时"
         timer_action = menu.addAction(timer_text)
+
+        # 表情 / 动作子菜单（动作包驱动；可手动指定表情，回到待机恢复呼吸动画）
+        action_menu = menu.addMenu("表情 / 动作")
+        back_action = action_menu.addAction("回到待机")
+        back_action.triggered.connect(self._reset_to_idle)
+        action_menu.addSeparator()
+        if self._actions:
+            for act_id, info in self._actions.items():
+                act = action_menu.addAction(info.get("name", act_id))
+                act.triggered.connect(
+                    lambda checked=False, aid=act_id: self._play_action(aid)
+                )
+        else:
+            disabled = action_menu.addAction("（无可用动作）")
+            disabled.setEnabled(False)
+
         font_action = menu.addAction("字号设置")
         today_total = TimerStorage.today_total_seconds()
         if today_total:
